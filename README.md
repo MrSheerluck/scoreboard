@@ -4,6 +4,8 @@ A personal effort tracker. Log hours across long-term pursuits — chess, readin
 
 Each user gets their own isolated data. Self-hostable in under 10 minutes on Cloudflare's free tier.
 
+[Demo Link](https://scoreboard.sheerluck.dev)
+
 ![Stack](https://img.shields.io/badge/Next.js-15-black) ![Stack](https://img.shields.io/badge/Cloudflare-Workers%20%2B%20D1-orange) ![Stack](https://img.shields.io/badge/Auth-Clerk-purple)
 
 ---
