@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --green:        #00ff41;
+  --green-dim:    #00cc33;
+  --green-muted:  #003b00;
+  --green-border: #1a3a1a;
+  --bg:           #000000;
+  --bg-card:      #050f05;
+  --bg-input:     #020802;
+  --glow-sm:      0 0 6px rgba(0, 255, 65, 0.4);
+  --glow-md:      0 0 14px rgba(0, 255, 65, 0.5);
+}
+
+* { box-sizing: border-box; }
+
+html { color-scheme: dark; }
+
+body {
+  background: var(--bg);
+  color: var(--green);
+  font-family: var(--font-geist-mono), "Courier New", monospace;
+}
+
+/* Scanline overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.04) 3px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  z-index: 9999;
+}
+
+/* Phosphor text glow on big numbers */
+.glow {
+  text-shadow: var(--glow-sm);
+}
+.glow-strong {
+  text-shadow: var(--glow-md);
+}
+
+/* Matrix border */
+.m-card {
+  background: var(--bg-card);
+  border: 1px solid var(--green-border);
+}
+.m-card:hover {
+  border-color: #2a5a2a;
+}
+
+/* Matrix input */
+.m-input {
+  background: var(--bg-input);
+  border: 1px solid var(--green-border);
+  color: var(--green);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.m-input:focus {
+  border-color: var(--green-dim);
+  box-shadow: 0 0 0 1px rgba(0, 204, 51, 0.2);
+}
+.m-input::placeholder {
+  color: var(--green-muted);
+}
+
+/* Date picker icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) sepia(1) saturate(5) hue-rotate(100deg);
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+/* Select arrow */
+select {
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300ff41' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+select option {
+  background: #050f05;
+  color: #00ff41;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: var(--green-border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--green-muted); }
+
+/* Number input: hide spinners */
+input[type="number"] { -moz-appearance: textfield; }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }

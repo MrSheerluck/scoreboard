@@ -1,0 +1,19 @@
+name = "scoreboard"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+main = ".open-next/worker.js"
+assets = { directory = ".open-next/assets", binding = "ASSETS" }
+
+[[d1_databases]]
+binding = "scoreboard"
+database_name = "scoreboard"
+database_id = "16fac654-5b37-4eba-adc7-5da7130ac332"
+
+[vars]
+NEXTJS_ENV = "production"
+# Set your Clerk publishable key here (visible in Clerk dashboard → API Keys)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_YOUR_KEY_HERE"
+NEXT_PUBLIC_CLERK_SIGN_IN_URL = "/sign-in"
+NEXT_PUBLIC_CLERK_SIGN_UP_URL = "/sign-up"
+# Set CLERK_SECRET_KEY as a secret (never commit it):
+#   wrangler secret put CLERK_SECRET_KEY

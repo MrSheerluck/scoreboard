@@ -1,0 +1,6 @@
+# Copy this file to .dev.vars and fill in your Clerk keys
+# Get them from: https://dashboard.clerk.com → Your app → API Keys
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_YOUR_KEY_HERE
+CLERK_SECRET_KEY=sk_test_YOUR_SECRET_HERE
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
