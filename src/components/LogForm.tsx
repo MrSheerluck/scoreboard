@@ -46,16 +46,16 @@ export default function LogForm({ categories, onLogged }: Props) {
   async function addCategory(e: React.FormEvent) {
     e.preventDefault();
     if (!newCat.trim()) return;
+    const catName = newCat.trim();
     startTransition(async () => {
       const res = await fetch("/api/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newCat.trim() }),
+        body: JSON.stringify({ name: catName }),
       });
       if (res.ok) {
-        const cat: Category = await res.json();
-        setCategoryId(cat.id.toString());
         setNewCat(""); setShowAddCat(false);
+        setCategoryId(""); // Reset to empty so useEffect will pick it back up
         onLogged();
       }
     });
