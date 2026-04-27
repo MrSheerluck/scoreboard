@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { format, parseISO } from "date-fns";
 
-type Entry = { id: number; category: string; color: string; hours: number; date: string };
+type Entry = { id: number; category: string; color: string; hours: number; date: string; description?: string };
 interface Props { entries: Entry[]; onDelete: () => void; }
 
 const PAGE_SIZE = 8;
@@ -49,12 +49,21 @@ export default function RecentEntries({ entries, onDelete }: Props) {
                 className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                 style={{ background: entry.color, boxShadow: `0 0 4px ${entry.color}` }}
               />
-              <span className="text-xs tracking-wider truncate" style={{ color: "var(--green-dim)" }}>
-                {entry.category.toUpperCase()}
-              </span>
-              <span className="text-xs font-bold tabular-nums" style={{ color: "var(--green)" }}>
-                {entry.hours.toFixed(1)}H
-              </span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs tracking-wider" style={{ color: "var(--green-dim)" }}>
+                    {entry.category.toUpperCase()}
+                  </span>
+                  <span className="text-xs font-bold tabular-nums" style={{ color: "var(--green)" }}>
+                    {entry.hours.toFixed(1)}H
+                  </span>
+                </div>
+                {entry.description && (
+                  <p className="text-xs truncate mt-0.5" style={{ color: "var(--green-muted)" }}>
+                    {entry.description}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <span className="text-xs" style={{ color: "var(--green-muted)" }}>

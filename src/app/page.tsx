@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import MomentumChart from "@/components/MomentumChart";
 import LogForm from "@/components/LogForm";
@@ -10,7 +10,7 @@ import { applyMatrixColors } from "@/lib/theme";
 
 type Category = { id: number; name: string; color: string };
 type DataPoint = Record<string, number | string>;
-type Entry = { id: number; category: string; color: string; hours: number; date: string };
+type Entry = { id: number; category: string; color: string; hours: number; date: string; description?: string };
 
 export default function Home() {
   const { user } = useUser();
@@ -18,10 +18,12 @@ export default function Home() {
   const [chartData, setChartData] = useState<DataPoint[]>([]);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmPurge, setConfirmPurge] = useState(false);
+  const [isPurging, startPurge] = useTransition();
 
   const refresh = useCallback(async () => {
     const [catRes, chartRes, entriesRes] = await Promise.all([
-      fetch("/api/categories"), // also triggers auto-seed for new users
+      fetch("/api/categories"),
       fetch("/api/chart"),
       fetch("/api/entries"),
     ]);
@@ -35,6 +37,18 @@ export default function Home() {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  function handlePurgeAll() {
+    if (confirmPurge) {
+      startPurge(async () => {
+        await fetch("/api/reset", { method: "DELETE" });
+        setConfirmPurge(false);
+        refresh();
+      });
+    } else {
+      setConfirmPurge(true);
+    }
+  }
 
   const now = new Date().toLocaleDateString("en-US", {
     weekday: "short", day: "2-digit", month: "short", year: "numeric",
@@ -63,22 +77,11 @@ export default function Home() {
                 </p>
               )}
             </div>
-            {/* Clerk user button — avatar + sign-out menu */}
             <UserButton
               appearance={{
                 elements: {
-                  avatarBox: {
-                    width: "32px",
-                    height: "32px",
-                    border: "1px solid #1a3a1a",
-                    borderRadius: "0px",
-                  },
-                  userButtonPopoverCard: {
-                    background: "#000",
-                    border: "1px solid #1a3a1a",
-                    borderRadius: "0px",
-                    boxShadow: "0 0 20px rgba(0,255,65,0.1)",
-                  },
+                  avatarBox: { width: "32px", height: "32px", border: "1px solid #1a3a1a", borderRadius: "0px" },
+                  userButtonPopoverCard: { background: "#000", border: "1px solid #1a3a1a", borderRadius: "0px", boxShadow: "0 0 20px rgba(0,255,65,0.1)" },
                   userButtonPopoverActionButton: { color: "#00cc33" },
                   userButtonPopoverActionButtonText: { color: "#00cc33" },
                   userButtonPopoverFooter: { display: "none" },
@@ -89,7 +92,13 @@ export default function Home() {
         </div>
 
         {/* Stats */}
-        {!loading && <StatsCards categories={categories} data={chartData} />}
+        {!loading && (
+          <StatsCards
+            categories={categories}
+            data={chartData}
+            onReset={refresh}
+          />
+        )}
 
         {/* Main grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
@@ -117,13 +126,41 @@ export default function Home() {
                 &gt; RECENT ENTRIES
               </p>
               {loading ? (
-                <p className="text-xs tracking-widest text-center py-4" style={{ color: "var(--green-muted)" }}>
-                  LOADING...
-                </p>
+                <p className="text-xs tracking-widest text-center py-4" style={{ color: "var(--green-muted)" }}>LOADING...</p>
               ) : (
                 <RecentEntries entries={entries} onDelete={refresh} />
               )}
             </div>
+
+            {/* Global reset */}
+            {!loading && (
+              <div
+                className="rounded-none p-4"
+                style={{ border: "1px solid #1a0a0a", background: "#050000" }}
+                onMouseLeave={() => setConfirmPurge(false)}
+              >
+                <p className="text-xs tracking-widest mb-3" style={{ color: "#330000" }}>
+                  &gt; DANGER ZONE
+                </p>
+                <button
+                  onClick={handlePurgeAll}
+                  disabled={isPurging}
+                  className="w-full py-2 text-xs tracking-widest transition-all"
+                  style={{
+                    background: "transparent",
+                    border: `1px solid ${confirmPurge ? "#ff4141" : "#330000"}`,
+                    color: confirmPurge ? "#ff4141" : "#550000",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#1a0000"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                >
+                  {isPurging ? "PURGING..." : confirmPurge ? "⚠ CONFIRM — PURGE ALL ENTRIES?" : "PURGE ALL ENTRIES"}
+                </button>
+                <p className="text-xs mt-2 tracking-widest" style={{ color: "#220000" }}>
+                  Categories are kept. Only logged hours are deleted.
+                </p>
+              </div>
+            )}
           </div>
 
         </div>

@@ -9,7 +9,7 @@ export async function GET() {
   const db = await getDB();
   const { results } = await db
     .prepare(
-      `SELECT e.id, e.category_id, c.name as category, c.color, e.hours, e.date, e.created_at
+      `SELECT e.id, e.category_id, c.name as category, c.color, e.hours, e.date, e.description, e.created_at
        FROM entries e
        JOIN categories c ON c.id = e.category_id
        WHERE e.user_id = ?
@@ -26,8 +26,8 @@ export async function POST(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json() as { category_id?: unknown; hours?: unknown; date?: unknown };
-  const { category_id, hours, date } = body;
+  const body = await req.json() as { category_id?: unknown; hours?: unknown; date?: unknown; description?: unknown };
+  const { category_id, hours, date, description } = body;
 
   if (!category_id || !hours || !date) {
     return NextResponse.json({ error: "category_id, hours, date required" }, { status: 400 });
@@ -40,19 +40,19 @@ export async function POST(req: NextRequest) {
   }
 
   const db = await getDB();
-
-  // Verify the category belongs to this user
   const cat = await db
     .prepare("SELECT id FROM categories WHERE id = ? AND user_id = ?")
     .bind(category_id as number, userId)
     .first();
   if (!cat) return NextResponse.json({ error: "Category not found" }, { status: 404 });
 
+  const desc = typeof description === "string" ? description.slice(0, 200) : "";
+
   const result = await db
     .prepare(
-      "INSERT INTO entries (category_id, hours, date, user_id) VALUES (?, ?, ?, ?) RETURNING *"
+      "INSERT INTO entries (category_id, hours, date, description, user_id) VALUES (?, ?, ?, ?, ?) RETURNING *"
     )
-    .bind(category_id as number, hours as number, date, userId)
+    .bind(category_id as number, hours as number, date, desc, userId)
     .first<Entry>();
 
   return NextResponse.json(result, { status: 201 });
@@ -67,7 +67,6 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const db = await getDB();
-  // Only delete if it belongs to this user
   await db
     .prepare("DELETE FROM entries WHERE id = ? AND user_id = ?")
     .bind(id, userId)
