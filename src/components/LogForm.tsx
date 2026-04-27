@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 
 type Category = { id: number; name: string; color: string };
 interface Props { categories: Category[]; onLogged: () => void; }
@@ -8,14 +8,22 @@ interface Props { categories: Category[]; onLogged: () => void; }
 function today() { return new Date().toISOString().slice(0, 10); }
 
 export default function LogForm({ categories, onLogged }: Props) {
-  const [categoryId, setCategoryId] = useState<string>(categories[0]?.id?.toString() ?? "");
+  const [categoryId, setCategoryId] = useState<string>("");
   const [hours, setHours] = useState("");
   const [date, setDate] = useState(today());
+  const [description, setDescription] = useState("");
   const [newCat, setNewCat] = useState("");
   const [showAddCat, setShowAddCat] = useState(false);
   const [error, setError] = useState("");
   const [ok, setOk] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  // Reactively set first category once categories load
+  useEffect(() => {
+    if (categories.length > 0 && !categoryId) {
+      setCategoryId(categories[0].id.toString());
+    }
+  }, [categories, categoryId]);
 
   async function submitEntry(e: React.FormEvent) {
     e.preventDefault();
@@ -26,10 +34,10 @@ export default function LogForm({ categories, onLogged }: Props) {
       const res = await fetch("/api/entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category_id: parseInt(categoryId), hours: h, date }),
+        body: JSON.stringify({ category_id: parseInt(categoryId), hours: h, date, description }),
       });
       if (!res.ok) { setError("ERR: WRITE FAILED"); return; }
-      setHours(""); setDate(today()); setOk(true);
+      setHours(""); setDate(today()); setDescription(""); setOk(true);
       setTimeout(() => setOk(false), 2000);
       onLogged();
     });
@@ -76,11 +84,7 @@ export default function LogForm({ categories, onLogged }: Props) {
             type="button"
             onClick={() => setShowAddCat(v => !v)}
             className="px-3 py-2 text-sm transition-colors"
-            style={{
-              background: "var(--bg-input)",
-              border: "1px solid var(--green-border)",
-              color: "var(--green-dim)",
-            }}
+            style={{ background: "var(--bg-input)", border: "1px solid var(--green-border)", color: "var(--green-dim)" }}
             title="New category"
           >
             +
@@ -99,11 +103,7 @@ export default function LogForm({ categories, onLogged }: Props) {
             <button
               type="submit"
               className="px-3 py-2 text-xs tracking-widest transition-colors"
-              style={{
-                background: "var(--green-muted)",
-                border: "1px solid var(--green-dim)",
-                color: "var(--green)",
-              }}
+              style={{ background: "var(--green-muted)", border: "1px solid var(--green-dim)", color: "var(--green)" }}
             >
               ADD
             </button>
@@ -128,35 +128,30 @@ export default function LogForm({ categories, onLogged }: Props) {
           className={inputCls}
         />
 
-        {error && (
-          <p className="text-xs tracking-widest" style={{ color: "#ff4141" }}>{error}</p>
-        )}
-        {ok && (
-          <p className="text-xs tracking-widest glow" style={{ color: "var(--green)" }}>
-            OK — ENTRY COMMITTED
-          </p>
-        )}
+        <input
+          type="text"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="NOTE  (optional)"
+          maxLength={200}
+          className={inputCls}
+        />
+
+        {error && <p className="text-xs tracking-widest" style={{ color: "#ff4141" }}>{error}</p>}
+        {ok && <p className="text-xs tracking-widest glow" style={{ color: "var(--green)" }}>OK — ENTRY COMMITTED</p>}
 
         <button
           type="submit"
           disabled={isPending}
           className="w-full py-2.5 text-sm tracking-widest font-bold transition-all"
           style={{
-            background: isPending ? "var(--green-muted)" : "transparent",
+            background: "transparent",
             border: "1px solid var(--green-dim)",
             color: isPending ? "var(--green-muted)" : "var(--green)",
-            boxShadow: isPending ? "none" : "inset 0 0 0 0 var(--green)",
+            opacity: isPending ? 0.5 : 1,
           }}
-          onMouseEnter={(e) => {
-            if (!isPending) {
-              (e.currentTarget as HTMLButtonElement).style.background = "var(--green-muted)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 12px rgba(0,255,65,0.2)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-            (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
-          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--green-muted)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
         >
           {isPending ? "WRITING..." : "> COMMIT ENTRY"}
         </button>

@@ -16,6 +16,7 @@ export type Entry = {
   category_id: number;
   hours: number;
   date: string;
+  description: string;
   created_at: string;
 };
 
