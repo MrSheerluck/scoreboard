@@ -20,11 +20,13 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    const [chartRes, entriesRes] = await Promise.all([
+    const [catRes, chartRes, entriesRes] = await Promise.all([
+      fetch("/api/categories"), // also triggers auto-seed for new users
       fetch("/api/chart"),
       fetch("/api/entries"),
     ]);
-    const { categories: cats, data } = await chartRes.json() as { categories: Category[]; data: DataPoint[] };
+    const cats = await catRes.json() as Category[];
+    const { data } = await chartRes.json() as { categories: Category[]; data: DataPoint[] };
     const recentEntries = await entriesRes.json() as Entry[];
     setCategories(applyMatrixColors(cats));
     setChartData(data);
